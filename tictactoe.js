@@ -1,3 +1,11 @@
+/*
+  This file consists all the function and logic
+  for the TicTacToe application.
+
+  The functions in this module repeatedly get called 
+  during the game play.
+*/
+
 function makeArray(w, h, val) {
   var arr = [];
   for (let i = 0; i < h; i++) {
@@ -10,19 +18,23 @@ function makeArray(w, h, val) {
 }
 
 module.exports = {
+  // Function to create a 2D array
   createVisitedArray: function (n) {
     var vis = makeArray(n, n, 0);
     return vis;
   },
+  // Function to create a MAP
   createMaps: function () {
     let map = new Map();
     return map;
   },
+  // Function to create arrays for diagonals
   createDiagonalArray: function () {
     var diag = [0, 0, 0, 0];
     return diag;
   },
 
+  // Function that checks if the indices (row, column) in the request are correct.
   checkValidRowCol: function (game, row, col) {
     const vis = game.visitedArray;
     const n = game.n;
@@ -31,10 +43,12 @@ module.exports = {
     return false;
   },
 
+
+  // Function that manipulates the board on the basis of the move that has been requested.
   playMove: function (game, row, col) {
     const n = game.n;
     if (game.player1Chance) {
-      //player1 chance
+      // Player 1 chance
       game.visitedArray[row][col] = 1;
       if (row == col) {
         game.diagonalValues[0] = game.diagonalValues[0] + 1;
@@ -44,9 +58,7 @@ module.exports = {
         }
       }
 
-      if (Number(row) + Number(col) == n-1) {
-        console.log("yes her");
-        console.log(game.diagonalValues[2]);
+      if (Number(row) + Number(col) == n - 1) {
         game.diagonalValues[2] = game.diagonalValues[2] + 1;
         if (game.diagonalValues[2] == n) {
           game.winner = 1;
@@ -61,14 +73,14 @@ module.exports = {
         return game;
       }
 
-      if (game.colMap1.get(row) == undefined) game.colMap1.set(col, 0);
+      if (game.colMap1.get(col) == undefined) game.colMap1.set(col, 0);
       game.colMap1.set(col, game.colMap1.get(col) + 1);
       if (game.colMap1.get(col) == n) {
         game.winner = 1;
         return game;
       }
     } else {
-      //player2 chance
+      // Player 2 chance
       game.visitedArray[row][col] = 2;
       if (row == col) {
         game.diagonalValues[1] = game.diagonalValues[1] + 1;
@@ -78,7 +90,7 @@ module.exports = {
         }
       }
 
-      if (Number(row) + Number(col) == n-1) {
+      if (Number(row) + Number(col) == n - 1) {
         game.diagonalValues[3] = game.diagonalValues[3] + 1;
         if (game.diagonalValues[3] == n) {
           game.winner = 2;
@@ -93,7 +105,7 @@ module.exports = {
         return game;
       }
 
-      if (game.colMap2.get(row) == undefined) game.colMap2.set(col, 0);
+      if (game.colMap2.get(col) == undefined) game.colMap2.set(col, 0);
       game.colMap2.set(col, game.colMap2.get(col) + 1);
       if (game.colMap2.get(col) == n) {
         game.winner = 2;

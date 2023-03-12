@@ -1,5 +1,10 @@
-var mongoose = require("mongoose");
+/*
+  This file consists of the model schema
+  used for the game.
 
+*/
+
+var mongoose = require("mongoose");
 var tictactoe = new mongoose.Schema({
   gameId: String,
   visitedArray: [[Number]],
@@ -13,7 +18,6 @@ var tictactoe = new mongoose.Schema({
   round: Number,
   n: Number,
 });
-
 
 module.exports = new mongoose.model("Tictactoe", tictactoe);
 
