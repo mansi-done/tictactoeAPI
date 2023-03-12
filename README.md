@@ -13,9 +13,11 @@ The base URL: https://tictactoe-game.up.railway.app/
     Body :
       game_num : number (OPTIONAL) // specifies the board size, by default 3x3
     
+    
 2. */gameStatus* : To return the status of a particular game
 	Query Params:
 		gameId: string // game id of the game should be sent with the request
+		
     
 3. */move* : To play a particular move
 	Query Params:
@@ -25,6 +27,7 @@ The base URL: https://tictactoe-game.up.railway.app/
     Body :
       row : number  // row of the move
       col : number  // col of the move 
+      
       
  4. */deletegame* :  To delete a particular game play
 	 Query Params:
