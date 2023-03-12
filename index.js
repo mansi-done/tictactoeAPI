@@ -40,10 +40,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 var cors = require("cors");
 app.use(cors());
 
+
+
 /*
   REQUEST
     Function name: Get All Games 
-    Path : "/"
+    Path : "/games"
     Method : GET
     Query Parameters: none
     Headers: none
@@ -54,7 +56,7 @@ app.use(cors());
   
   Function that returns all the played games.
 */
-app.get("/", async (req, res) => {
+app.get("/games", async (req, res) => {
   const data = await tictactoeModel.find({});
   res.send(data);
 });
@@ -246,6 +248,24 @@ app.post("/delete", async (req, res) => {
       res.send(del);
     } else res.status(404).send("Key is incorrect, cannot delete");
   }
+});
+
+/*
+  REQUEST
+    Function name: Home
+    Path : "/"
+    Method : GET
+    Query Parameters: none
+    Headers: none
+    body : none
+
+  RESPONSE 
+    Home screen string
+  
+  Home function
+*/
+app.get("/", async (req, res) => {
+  res.send("Scalable Tic Tac Toe API, created by Mansi Saini");
 });
 
 
