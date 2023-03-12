@@ -22,8 +22,8 @@ The base URL: https://tictactoe-game.up.railway.app/
 3. */move* : To play a particular move
 	Query Params:
 		gameId: string // game id of the game should be sent with the request
-	Headers: 
-      "Content-Type": "application/x-www-form-urlencoded" 
+	Headers: "Content-Type": "application/x-www-form-urlencoded" 
+	
     Body :
       row : number  // row of the move
       col : number  // col of the move 
