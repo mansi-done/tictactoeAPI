@@ -6,6 +6,17 @@ const mongoose = require("mongoose");
 
 // APP
 const app = express();
+const http = require("http");
+const server = http.createServer(app);
+
+// Socket.io
+const { Server } = require("socket.io");
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 
 // Local requirements
 const tools = require("./tictactoe");
@@ -39,27 +50,6 @@ var tictactoeModel = require("./tictactoemodel");
 app.use(bodyParser.urlencoded({ extended: true }));
 var cors = require("cors");
 app.use(cors());
-
-
-
-/*
-  REQUEST
-    Function name: Get All Games 
-    Path : "/games"
-    Method : GET
-    Query Parameters: none
-    Headers: none
-    body : none
-
-  RESPONSE 
-    JSON Object of all games.
-  
-  Function that returns all the played games.
-*/
-app.get("/games", async (req, res) => {
-  const data = await tictactoeModel.find({});
-  res.send(data);
-});
 
 /*
   REQUEST
@@ -95,6 +85,8 @@ app.post("/start", async (req, res) => {
   const player1Chance = true;
   const winner = 0;
   const round = n * n;
+  const message = "ongoing";
+  const chat = [];
 
   const newGame = new tictactoeModel({
     gameId: gameId,
@@ -108,6 +100,8 @@ app.post("/start", async (req, res) => {
     winner: winner,
     round: round,
     n: n,
+    message: message,
+    chat:chat,
   });
 
   const result = await newGame.save();
@@ -171,7 +165,10 @@ app.post("/move", async (req, res) => {
       winnerstring = "Game is tied";
     } else
       winnerstring = "Game Already over, winner is " + game.winner.toString();
-    res.send(winnerstring);
+    newGame = game;
+    newGame.message = winnerstring;
+    await game.updateOne(newgame);
+    res.send(game);
   } else {
     if (row == undefined || col == undefined) {
       res.status(406).send("row and col must be specified,try again");
@@ -182,10 +179,16 @@ app.post("/move", async (req, res) => {
 
         if (newgame.winner != 0) {
           const winnerstring = "Game Over, Winner is " + game.winner.toString();
-          res.send(winnerstring);
+          newGame = game;
+          newGame.message = winnerstring;
+          await game.updateOne(newgame);
+          res.send(game);
         } else if (newgame.round == 0) {
           const winnerstring = "Game is tied";
-          res.send(winnerstring);
+          newGame = game;
+          newGame.message = winnerstring;
+          await game.updateOne(newgame);
+          res.send(game);
         } else res.send(game);
       } else res.status(404).send("Invalid Indices");
     }
@@ -211,12 +214,12 @@ app.post("/move", async (req, res) => {
 
 app.post("/deletegame", async (req, res) => {
   const gameId = req.query.gameId;
-  if (gameId === undefined)
-    res.status(404).send("gameId is required");
+  if (gameId === undefined) res.status(404).send("gameId is required");
   else {
-    const del = await tictactoeModel.deleteOne({gameId: gameId});
-    console.log(del.deletedCount)
-    if(del.deletedCount == '0') res.status(404).send("Game does not exist, please send correct gameId");
+    const del = await tictactoeModel.deleteOne({ gameId: gameId });
+    console.log(del.deletedCount);
+    if (del.deletedCount == "0")
+      res.status(404).send("Game does not exist, please send correct gameId");
     else res.status(200).send(del);
   }
 });
@@ -240,14 +243,42 @@ app.post("/deletegame", async (req, res) => {
 
 app.post("/delete", async (req, res) => {
   const key = req.query.key;
-  if (key === undefined)
-    res.status(404).send("Key Param is required");
+  if (key === undefined) res.status(404).send("Key Param is required");
   else {
     if (key == mykey) {
       const del = await tictactoeModel.deleteMany({});
       res.send(del);
     } else res.status(404).send("Key is incorrect, cannot delete");
   }
+});
+
+app.post("/insertchat", async (req, res) => {
+  const gameId = req.query.gameId;
+  const game = await tictactoeModel.findOne({ gameId: gameId });
+  const newChat = req.body.chat;
+  const newGame = game;
+  newGame.chat = newChat;
+  await game.updateOne(newGame);
+  res.send(game);
+});
+
+/*
+  REQUEST
+    Function name: Get All Games 
+    Path : "/games"
+    Method : GET
+    Query Parameters: none
+    Headers: none
+    body : none
+
+  RESPONSE 
+    JSON Object of all games.
+  
+  Function that returns all the played games.
+*/
+app.get("/games", async (req, res) => {
+  const data = await tictactoeModel.find({});
+  res.send(data);
 });
 
 /*
@@ -268,7 +299,42 @@ app.get("/", async (req, res) => {
   res.send("Scalable Tic Tac Toe API, created by Mansi Saini");
 });
 
+// app.listen(port, () => {
+//   console.log(`Example app listening on port ${port}`);
+// });
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+io.on("connection", (socket) => {
+  console.log(`${socket.id} is connected`);
+  socket.emit("connection-message", "Hello from the server!");
+
+  socket.on("client-to-server-message", (data) => {
+    console.log(data.message);
+    socket.broadcast.emit("server-to-client-message", data);
+  });
+
+  socket.on("start-new-game", (data) => {
+    console.log("new game starting");
+    socket.join(data.game);
+    socket.to(data.game).emit("message-chat",{msg:"Joined game", game:data.game,playerName:data.playerName });
+  });
+
+  socket.on("join-new-game", (data) => {
+    socket.join(data.game);
+    socket.to(data.game).emit("message-chat",{msg:"Joined game", game:data.game,playerName:data.playerName });
+
+  });
+
+  socket.on("turn-complete", (data) => {
+    console.log(data.game);
+    socket.to(data.game).emit("update-game",{gameId:data.game});
+  });
+
+  socket.on("chat-message",(data)=>{
+    console.log(data);
+    socket.to(data.game).emit("message-chat",data)
+  })
+});
+
+server.listen(port, () => {
+  console.log("listening on *:5000");
 });

@@ -17,6 +17,12 @@ var tictactoe = new mongoose.Schema({
   winner: Number,
   round: Number,
   n: Number,
+  message : String,
+  chat :[{
+    "datetime":String,
+    "message":String,
+  }]
+  
 });
 
 module.exports = new mongoose.model("Tictactoe", tictactoe);
